@@ -6,26 +6,35 @@
 #include <assert.h>
 #include <iostream>
 #include <unistd.h>
+#include <string.h>
 
 //Standar for puzzle size
 const int SIZE = 9;
+//Number of players allow
+const int NPLAYERS = 5;
 
 using namespace std;
 
 class Sudoku{
 	private:
 		int board[SIZE][SIZE];
-		int player, column, row, value;
+		int score[NPLAYERS];
+		int player, column, row, value, currentPlayers;
 
 		
 	public:
 		//Initializing a 0's fill board
 		Sudoku(){
-			for (int i=0;i<SIZE;i++){
-				for (int j=0;j<SIZE;j++){
+			for (int i=0; i < SIZE; i++){
+				for (int j=0; j < SIZE; j++){
 					board[i][j] = 0;
 				}
 			}
+			
+			for(int i=0; i < NPLAYERS; i++){
+				score[i] = 0;
+			}
+			currentPlayers = 0;
 		}
 		
 		//Initializing a Sudoku coping a given matrix
@@ -33,6 +42,12 @@ class Sudoku{
 			for(int a=0; a<SIZE; a++)
 				for(int b=0; b<SIZE; b++)
 					board[a][b]==matrix[a][b];
+	
+			for(int i=0; i < NPLAYERS; i++){
+				score[i] = 0;
+			}
+
+			currentPlayers = 0;
 		}
 		
 		//Allows to place a number in a given position (Columnd,Row) only if doesn't break the sudoke rules
@@ -44,19 +59,16 @@ class Sudoku{
 		
 		//Validate if a given input (Column, Row and Value) is under the restrictions. 1 for wrong column, 2 for wronw row, 3 for wrong value, 0 if everything is ok
 		int Validate(int col, int row, int value){
-			if (!ValidInt(col, SIZE-1)){
+			//validates the player
+			if(player >= currentPlayers)
+				return 5;
+			if (!ValidInt(col, SIZE-1))
 				return 1;
-			}else{
-				 if (!ValidInt(row, SIZE-1)){
-					return 2;
-				}else{ 
-					if (!ValidInt(value, 9)){
-						return 3;
-					}else{
-						return 0;
-					}
-				}
-			}
+			if (!ValidInt(row, SIZE-1))
+				return 2;
+			if (!ValidInt(value, 9))
+				return 3;
+			return 0;
 		}
 		
 		//Auxiliar function to chek if a given number is between 0 and a given maximum
@@ -112,11 +124,10 @@ class Sudoku{
 			}
 		}
 
-		char* Responder(){
-		}
-
+		//Executes de main thread of the game, validating values, and sudoku rules, it adds and substract point to the current player
 		int Play(char* buffer){
 			int responseCode = Translate(buffer);
+			cout << currentPlayers << endl;
 			cout << "Values in sudoku... " << column <<";"<< row <<";" << value << endl;
 			cout << "A chequear el Traductor... " << endl;
 			if(responseCode == 0){
@@ -125,11 +136,14 @@ class Sudoku{
 				if(responseCode == 0){
 					cout << "A poner el valor... " << endl;
 					Place(column, row, value);
-					//---->sumar score
+					//-----> sumar score
+					AddScore(2);
 					Print();
 					cout << endl;	
 				}else{
 					cout << "Jugada invalida. Codigo de error: " << responseCode << endl;
+					//-----> restar score
+					SubbScore(2);
 				}
 			}else{
 			cout << "Result especifications: " << endl;
@@ -137,11 +151,45 @@ class Sudoku{
 			cout << " 1 <--  Invalid COLUMN value " << endl;
 			cout << " 2 <--  Invalid ROW value " << endl;
 			cout << " 3 <--  Invalid NUMBER TO PLACE " << endl;
+			cout << " 5 <--  Invalid PLAYER code " << endl;
 			cout << "Getting results... --> " << responseCode << endl;
-			cout << endl;}
-			//cout << "Valores invalidos. Codigo de error: " << responseCode << endl;
+			cout << endl;
 			//-----> restar score
+			SubbScore(1);
+			}
+			//Imprime la tabla de puntuacion
+			cout << "Tabla de Puntaje:  " << endl;
+			for(int i=0; i < currentPlayers-1; i++)
+				cerr << "Jugador " << i << ": " << score[i] << " -- ";
+			if(currentPlayers >=1)
+				cerr << "Jugador " << currentPlayers-1 << ": " << score[currentPlayers-1];
 			return responseCode;
+		}
+
+		//Manejo del Score
+		//Adding given points to the current player
+		void AddScore(int points){
+			score[player] += points;		
+		}
+
+		//Substracting given points to the current player
+		void SubbScore(int points){
+			score[player] -= points;		
+		}
+
+		//Manejo de jugadores
+		//If there is lees players than the maximun allowed add a new player and return the new player code otherwise returns error code 991
+		int NewPlayer(){
+			if(currentPlayers < NPLAYERS){
+				currentPlayers +=1;
+				return 	currentPlayers-1;		
+			}else{
+				return 991;
+			}
+		}
+
+		int ValidPlayer(int playerCode){
+			return playerCode < currentPlayers;
 		}
 };
 
@@ -157,8 +205,11 @@ int main (void){
 	//Declarating useful variables    
 	//int player, column, row, value;
 	char responseCode[5] = "43";
+
 	//Initializing a Sudoku Game   
 	Sudoku sudoku;
+
+	//Showing initial board
 	sudoku.Print();
 
     
@@ -166,35 +217,20 @@ int main (void){
 		char buffer[10];
 		zmq_recv (responder, buffer, 10, 0);
 		
-		//Extracting variable from an string input
-		//sscanf(buffer, "%d;%d;%d;%d", &player ,&column, &row, &value);
-
-		/*
-		//Checking restriccions
-		system("clear");
-		cout << "Validating values... " << buffer << endl;
-		cout << endl;
-		cout << "Result especifications: " << endl;
-		cout << " 0 <--  Valid results " << endl;
-		cout << " 1 <--  Invalid COLUMN value " << endl;
-		cout << " 2 <--  Invalid ROW value " << endl;
-		cout << " 3 <--  Invalid NUMBER TO PLACE " << endl;
-		cout << "Getting results... --> " << sudoku.Translate(buffer) << endl;
-		cout << endl;
-
-		//Checking Sudoku rules
-		std::cout << "Checking viability of given movement..." << std::boolalpha << sudoku.Check(column, row, value) << std::endl;
-
-		//Attempt to place the value
-		sudoku.Place(column, row, value);
-
-		sudoku.Print();
-		*/
-
+		//Either initialize a new player or make a move
+		if(strcmp(buffer, "init")==0){
+			cout << endl;
+			cout << "Iniciando Jugador..." << endl;
+			cout << "Inyectando nano recpetores clase beta..." << endl;
+			int newPlayer = sudoku.NewPlayer();
+			cout << "Bienvenido Jugador..." << newPlayer << endl;
+			sprintf(responseCode, "%d", newPlayer);
+		}else{
 		cout << endl;
 		cout << "New movement:" << endl;
 		cout << "Validating values... " << buffer << endl;
 		sprintf(responseCode,"%d",sudoku.Play(buffer));
+		}
 
 		//Responding to client
 		zmq_send (responder, responseCode , 5, 0);

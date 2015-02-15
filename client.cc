@@ -14,7 +14,7 @@ int main (void){
 	
    
 	    char buffer [5];
-        zmq_send (requester, "1;5;7;5", 10, 0); 
+        zmq_send (requester, "4;2;7;9", 10, 0); 
         zmq_recv (requester, buffer, 5, 0); 
         printf ("Received %s\n",buffer);
     //}
