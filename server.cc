@@ -1,4 +1,27 @@
 //    Sudoku cooperative Server side
+/*
+ Julian Villaquiran
+ Universidad Tecnologica de Pereria
+ Arquitectura Cliente/Servidor
+ Github: julivillaquiran
+*/
+
+/*
+All messages between Client & Server must be send as a char*
+
+Initial message form client MUST BE "init", this allows new player to be add to the current game.
+Response would be one of the followings:
+Number between 0 & NPLAYERS(Maximum of players allowed for each game) <-- Code for the player
+991 <-- If Maximum of players have been add
+
+Result especifications:
+0 <--  Valid results. Used if the movement is correct and the number has been placed
+1 <--  Invalid COLUMN value
+2 <--  Invalid ROW value
+3 <--  Invalid NUMBER TO PLACE
+4 <--  Invalid MOVEMENT, if movement doesnt obey Sudoku rules
+5 <--  Invalid PLAYER code	
+*/
 
 #include <zmq.h>
 #include <stdio.h>
