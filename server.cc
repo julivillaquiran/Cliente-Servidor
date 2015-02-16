@@ -52,7 +52,7 @@ class Sudoku{
 		
 		//Allows to place a number in a given position (Columnd,Row) only if doesn't break the sudoke rules
 		void Place(int col, int row, int value){
-			//if(Check(col,row,value))
+			if(Check(col,row,value)==0)
 				board[row][col] = value; 
 		}
 		
@@ -127,14 +127,13 @@ class Sudoku{
 		//Executes de main thread of the game, validating values, and sudoku rules, it adds and substract point to the current player
 		int Play(char* buffer){
 			int responseCode = Translate(buffer);
-			cout << currentPlayers << endl;
-			cout << "Values in sudoku... " << column <<";"<< row <<";" << value << endl;
-			cout << "A chequear el Traductor... " << endl;
+			cout << "Validating values in sudoku... " << player <<";"<< column <<";"<< row <<";" << value << endl;
+			//cout << "A chequear el Traductor... " << endl;
 			if(responseCode == 0){
-				cout << "A chequear el Checker... " << endl;
+				//cout << "A chequear el Checker... " << endl;
 				responseCode = Check(column, row, value);
 				if(responseCode == 0){
-					cout << "A poner el valor... " << endl;
+					//cout << "A poner el valor... " << endl;
 					Place(column, row, value);
 					//-----> sumar score
 					AddScore(2);
@@ -158,11 +157,7 @@ class Sudoku{
 			SubbScore(1);
 			}
 			//Imprime la tabla de puntuacion
-			cout << "Tabla de Puntaje:  " << endl;
-			for(int i=0; i < currentPlayers-1; i++)
-				cerr << "Jugador " << i << ": " << score[i] << " -- ";
-			if(currentPlayers >=1)
-				cerr << "Jugador " << currentPlayers-1 << ": " << score[currentPlayers-1];
+			ShowScore();
 			return responseCode;
 		}
 
@@ -175,6 +170,15 @@ class Sudoku{
 		//Substracting given points to the current player
 		void SubbScore(int points){
 			score[player] -= points;		
+		}
+	
+		//Show score table
+		void ShowScore(){
+			cout << "Tabla de Puntaje:  " << endl;
+			for(int i=0; i < currentPlayers-1; i++)
+				cerr << "Jugador " << i << ": " << score[i] << " -- ";
+			if(currentPlayers >=1)
+				cout << "Jugador " << currentPlayers-1 << ": " << score[currentPlayers-1]<< endl;
 		}
 
 		//Manejo de jugadores
@@ -224,11 +228,11 @@ int main (void){
 			cout << "Inyectando nano recpetores clase beta..." << endl;
 			int newPlayer = sudoku.NewPlayer();
 			cout << "Bienvenido Jugador..." << newPlayer << endl;
+			sudoku.ShowScore();
 			sprintf(responseCode, "%d", newPlayer);
 		}else{
 		cout << endl;
 		cout << "New movement:" << endl;
-		cout << "Validating values... " << buffer << endl;
 		sprintf(responseCode,"%d",sudoku.Play(buffer));
 		}
 
